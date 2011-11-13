@@ -24,9 +24,9 @@
 #define PAGING_VIEWS 3
 
 #define TOOLBAR_HEIGHT 44.0f
-#define PAGEBAR_HEIGHT 48.0f
+#define PAGEBAR_HEIGHT 45.0f
 
-#define TAP_AREA_SIZE 48.0f
+#define TAP_AREA_SIZE 44.0f
 
 #pragma mark Properties
 
@@ -310,7 +310,9 @@
 
 	assert(self.splitViewController == nil); // Not supported (sorry)
 
-	self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
+	//self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
+    
+    [self.view setBackgroundColor: [UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_content_gray.png"]]];
 
 	CGRect viewRect = self.view.bounds; // View controller's view bounds
 

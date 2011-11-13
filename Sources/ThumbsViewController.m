@@ -81,7 +81,9 @@
 
 	NSAssert(!(document == nil), @"ReaderDocument == nil");
 
-	self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
+	//self.view.backgroundColor = [UIColor scrollViewTexturedBackgroundColor];
+    
+    [self.view setBackgroundColor: [UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_content_gray.png"]]];
 
 	CGRect viewRect = self.view.bounds; // View controller's view bounds
 

@@ -133,6 +133,15 @@
 
 	if ((self = [super initWithFrame:frame]))
 	{
+        UIView *backgroundView = [[UIView alloc] initWithFrame:self.bounds];
+        [backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
+        [backgroundView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_header.png"]]];
+        [backgroundView setOpaque:NO];
+        [backgroundView setAlpha:0.8];
+        [self addSubview:backgroundView];
+        
+        [self setBackgroundColor:[UIColor clearColor]];
+        
 		self.autoresizesSubviews = YES;
 		self.userInteractionEnabled = YES;
 		self.contentMode = UIViewContentModeRedraw;

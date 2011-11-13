@@ -61,6 +61,15 @@
 	if ((self = [super initWithFrame:frame]))
 	{
 		CGFloat viewWidth = self.bounds.size.width;
+        
+        UIView *backgroundView = [[UIView alloc] initWithFrame:self.bounds];
+        [backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
+        [backgroundView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_header.png"]]];
+        [backgroundView setOpaque:NO];
+        [backgroundView setAlpha:0.8];
+        [self addSubview:backgroundView];
+        
+        [self setBackgroundColor:[UIColor clearColor]];
 
 		UIImage *imageH = [UIImage imageNamed:@"Reader-Button-H.png"];
 		UIImage *imageN = [UIImage imageNamed:@"Reader-Button-N.png"];
@@ -190,11 +199,11 @@
 			UILabel *titleLabel = [[UILabel alloc] initWithFrame:titleRect];
 
 			titleLabel.textAlignment = UITextAlignmentCenter;
-			titleLabel.font = [UIFont systemFontOfSize:19.0f]; // 19 pt
+			titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:16.0f];
 			titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 			titleLabel.baselineAdjustment = UIBaselineAdjustmentAlignCenters;
-			titleLabel.textColor = [UIColor colorWithWhite:0.0f alpha:1.0f];
-			titleLabel.shadowColor = [UIColor colorWithWhite:0.65f alpha:1.0f];
+			titleLabel.textColor = [UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1];
+			titleLabel.shadowColor = [UIColor whiteColor];
 			titleLabel.backgroundColor = [UIColor clearColor];
 			titleLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
 			titleLabel.adjustsFontSizeToFitWidth = YES;
