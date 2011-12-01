@@ -24,7 +24,7 @@
 
 #pragma mark Constants
 
-#define TOOLBAR_HEIGHT 44.0f
+#define TOOLBAR_HEIGHT 50.0f
 
 #define PAGE_THUMB_SMALL 160
 #define PAGE_THUMB_LARGE 256
