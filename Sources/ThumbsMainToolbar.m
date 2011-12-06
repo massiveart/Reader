@@ -73,7 +73,7 @@
 		[doneButton addTarget:self action:@selector(doneButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
 		[doneButton setBackgroundImage:buttonH forState:UIControlStateHighlighted];
 		[doneButton setBackgroundImage:buttonN forState:UIControlStateNormal];
-		doneButton.titleLabel.font = [UIFont systemFontOfSize:14.0f];
+		doneButton.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:13.0];
 		doneButton.autoresizingMask = UIViewAutoresizingNone;
 
 		[self addSubview:doneButton];
