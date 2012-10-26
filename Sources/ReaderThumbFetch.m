@@ -1,15 +1,26 @@
 //
 //	ReaderThumbFetch.m
-//	Reader v2.5.0
+//	Reader v2.6.1
 //
 //	Created by Julius Oklamcak on 2011-09-01.
-//	Copyright © 2011 Julius Oklamcak. All rights reserved.
+//	Copyright © 2011-2012 Julius Oklamcak. All rights reserved.
 //
-//	This work is being made available under a Creative Commons Attribution license:
-//		«http://creativecommons.org/licenses/by/3.0/»
-//	You are free to use this work and any derivatives of this work in personal and/or
-//	commercial products and projects as long as the above copyright is maintained and
-//	the original author is attributed.
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights to
+//	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+//	of the Software, and to permit persons to whom the Software is furnished to
+//	do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 #import "ReaderThumbFetch.h"
@@ -20,60 +31,35 @@
 #import <ImageIO/ImageIO.h>
 
 @implementation ReaderThumbFetch
-
-//#pragma mark Properties
-
-//@synthesize ;
+{
+	ReaderThumbRequest *request;
+}
 
 #pragma mark ReaderThumbFetch instance methods
 
-- (id)initWithRequest:(ReaderThumbRequest *)object
+- (id)initWithRequest:(ReaderThumbRequest *)options
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	if ((self = [super initWithGUID:object.guid]))
+	if ((self = [super initWithGUID:options.guid]))
 	{
-		request = [object retain];
+		request = options;
 	}
 
 	return self;
 }
 
-- (void)dealloc
-{
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	if (request.thumbView.operation == self)
-	{
-		request.thumbView.operation = nil; // Done
-	}
-
-	[request release], request = nil;
-
-	[super dealloc];
-}
-
 - (void)cancel
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
+	[super cancel]; // Cancel the operation
+
+	request.thumbView.operation = nil; // Break retain loop
+
+	request.thumbView = nil; // Release target thumb view on cancel
 
 	[[ReaderThumbCache sharedInstance] removeNullForKey:request.cacheKey];
-
-	[super cancel];
 }
 
 - (NSURL *)thumbFileURL
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	NSString *cachePath = [ReaderThumbCache thumbCachePathForGUID:request.guid]; // Thumb cache path
 
 	NSString *fileName = [NSString stringWithFormat:@"%@.png", request.thumbName]; // Thumb file name
@@ -83,17 +69,9 @@
 
 - (void)main
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
+	CGImageRef imageRef = NULL; NSURL *thumbURL = [self thumbFileURL];
 
-	if (self.isCancelled == YES) return;
-
-	[[NSThread currentThread] setName:@"ReaderThumbFetch"];
-
-	NSURL *thumbURL = [self thumbFileURL]; CGImageRef imageRef = NULL;
-
-	CGImageSourceRef loadRef = CGImageSourceCreateWithURL((CFURLRef)thumbURL, NULL);
+	CGImageSourceRef loadRef = CGImageSourceCreateWithURL((__bridge CFURLRef)thumbURL, NULL);
 
 	if (loadRef != NULL) // Load the existing thumb image
 	{
@@ -111,19 +89,25 @@
 		{
 			request.thumbView.operation = thumbRender; // Update the thumb view operation property to the new operation
 
-			[[ReaderThumbQueue sharedInstance] addWorkOperation:thumbRender]; // Queue the operation
+			[[ReaderThumbQueue sharedInstance] addWorkOperation:thumbRender]; return; // Queue the operation
 		}
-
-		[thumbRender release]; // Release ReaderThumbRender object
 	}
 
-	if (imageRef != NULL) // Create UIImage from CGImage and show it
+	if (imageRef != NULL) // Create a UIImage from a CGImage and show it
 	{
-		UIImage *image = [UIImage imageWithCGImage:imageRef scale:request.scale orientation:0];
+		UIImage *image = [UIImage imageWithCGImage:imageRef scale:request.scale orientation:UIImageOrientationUp];
 
 		CGImageRelease(imageRef); // Release the CGImage reference from the above thumb load code
 
-		[[ReaderThumbCache sharedInstance] setObject:image forKey:request.cacheKey]; // Update cache
+		UIGraphicsBeginImageContextWithOptions(image.size, YES, request.scale); // Graphics context
+
+		[image drawAtPoint:CGPointZero]; // Decode and draw the image on this background thread
+
+		UIImage *decoded = UIGraphicsGetImageFromCurrentImageContext(); // Newly decoded image
+
+		UIGraphicsEndImageContext(); // Cleanup after the bitmap-based graphics drawing context
+
+		[[ReaderThumbCache sharedInstance] setObject:decoded forKey:request.cacheKey]; // Cache it
 
 		if (self.isCancelled == NO) // Show the image in the target thumb view on the main thread
 		{
@@ -133,10 +117,12 @@
 
 			dispatch_async(dispatch_get_main_queue(), // Queue image show on main thread
 			^{
-				if (thumbView.targetTag == targetTag) [thumbView showImage:image];
+				if (thumbView.targetTag == targetTag) [thumbView showImage:decoded];
 			});
 		}
 	}
+
+	request.thumbView.operation = nil; // Break retain loop
 }
 
 @end

@@ -1,5 +1,5 @@
 //
-//	CGPDFDocument.h
+//	Reader-Prefix.pch
 //	Reader v2.6.0
 //
 //	Created by Julius Oklamcak on 2011-07-01.
@@ -23,13 +23,10 @@
 //	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
-
-//
-//	Custom CGPDFDocument[...] functions
-//
-
-CGPDFDocumentRef CGPDFDocumentCreateX(CFURLRef theURL, NSString *password);
-
-BOOL CGPDFDocumentNeedsPassword(CFURLRef theURL, NSString *password);
+#ifdef __OBJC__
+	#import <UIKit/UIKit.h>
+	#import <Foundation/Foundation.h>
+	#import <CoreGraphics/CoreGraphics.h>
+	#import <QuartzCore/QuartzCore.h>
+	#import <ImageIO/ImageIO.h>
+#endif

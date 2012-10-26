@@ -1,35 +1,54 @@
 //
 //	ReaderContentPage.m
-//	Reader v2.5.0
+//	Reader v2.6.1
 //
 //	Created by Julius Oklamcak on 2011-07-01.
-//	Copyright © 2011 Julius Oklamcak. All rights reserved.
+//	Copyright © 2011-2012 Julius Oklamcak. All rights reserved.
 //
-//	This work is being made available under a Creative Commons Attribution license:
-//		«http://creativecommons.org/licenses/by/3.0/»
-//	You are free to use this work and any derivatives of this work in personal and/or
-//	commercial products and projects as long as the above copyright is maintained and
-//	the original author is attributed.
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights to
+//	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+//	of the Software, and to permit persons to whom the Software is furnished to
+//	do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+#import "ReaderConstants.h"
 #import "ReaderContentPage.h"
 #import "ReaderContentTile.h"
 #import "CGPDFDocument.h"
 
 @implementation ReaderContentPage
+{
+	NSMutableArray *_links;
 
-//#pragma mark Properties
+	CGPDFDocumentRef _PDFDocRef;
 
-//@synthesize ;
+	CGPDFPageRef _PDFPageRef;
+
+	NSInteger _pageAngle;
+
+	CGFloat _pageWidth;
+	CGFloat _pageHeight;
+
+	CGFloat _pageOffsetX;
+	CGFloat _pageOffsetY;
+}
 
 #pragma mark ReaderContentPage class methods
 
 + (Class)layerClass
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	return [ReaderContentTile class];
 }
 
@@ -37,10 +56,6 @@
 
 - (void)highlightPageLinks
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	if (_links.count > 0) // Add highlight views over all links
 	{
 		UIColor *hilite = [UIColor colorWithRed:0.0f green:0.0f blue:1.0f alpha:0.15f];
@@ -51,22 +66,17 @@
 
 			highlight.autoresizesSubviews = NO;
 			highlight.userInteractionEnabled = NO;
-			highlight.clearsContextBeforeDrawing = NO;
 			highlight.contentMode = UIViewContentModeRedraw;
 			highlight.autoresizingMask = UIViewAutoresizingNone;
 			highlight.backgroundColor = hilite; // Color
 
-			[self addSubview:highlight]; [highlight release];
+			[self addSubview:highlight];
 		}
 	}
 }
 
 - (ReaderDocumentLink *)linkFromAnnotation:(CGPDFDictionaryRef)annotationDictionary
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	ReaderDocumentLink *documentLink = nil; // Document link object
 
 	CGPDFArrayRef annotationRectArray = NULL; // Annotation co-ordinates array
@@ -85,6 +95,9 @@
 		if (ll_x > ur_x) { CGPDFReal t = ll_x; ll_x = ur_x; ur_x = t; } // Normalize Xs
 		if (ll_y > ur_y) { CGPDFReal t = ll_y; ll_y = ur_y; ur_y = t; } // Normalize Ys
 
+		ll_x -= _pageOffsetX; ll_y -= _pageOffsetY; // Offset lower-left co-ordinate
+		ur_x -= _pageOffsetX; ur_y -= _pageOffsetY; // Offset upper-right co-ordinate
+
 		switch (_pageAngle) // Page rotation angle (in degrees)
 		{
 			case 90: // 90 degree page rotation
@@ -100,15 +113,15 @@
 				CGPDFReal swap;
 				swap = ll_y; ll_y = ll_x; ll_x = swap;
 				swap = ur_y; ur_y = ur_x; ur_x = swap;
-				ll_x = ((0.0f - ll_x) + _pageSize.width);
-				ur_x = ((0.0f - ur_x) + _pageSize.width);
+				ll_x = ((0.0f - ll_x) + _pageWidth);
+				ur_x = ((0.0f - ur_x) + _pageWidth);
 				break;
 			}
 
 			case 0: // 0 degree page rotation
 			{
-				ll_y = ((0.0f - ll_y) + _pageSize.height);
-				ur_y = ((0.0f - ur_y) + _pageSize.height);
+				ll_y = ((0.0f - ll_y) + _pageHeight);
+				ur_y = ((0.0f - ur_y) + _pageHeight);
 				break;
 			}
 		}
@@ -118,7 +131,7 @@
 
 		CGRect viewRect = CGRectMake(vr_x, vr_y, vr_w, vr_h); // View CGRect from PDFRect
 
-		documentLink = [ReaderDocumentLink withRect:viewRect dictionary:annotationDictionary];
+		documentLink = [ReaderDocumentLink newWithRect:viewRect dictionary:annotationDictionary];
 	}
 
 	return documentLink;
@@ -126,10 +139,6 @@
 
 - (void)buildAnnotationLinksList
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	_links = [NSMutableArray new]; // Links list array
 
 	CGPDFArrayRef pageAnnotations = NULL; // Page annotations array
@@ -160,16 +169,12 @@
 			}
 		}
 
-//		[self highlightPageLinks]; // For link support debugging
+		//[self highlightPageLinks]; // Link support debugging
 	}
 }
 
-- (CGPDFArrayRef)findDestinationWithName:(const char *)destinationName inDestsTree:(CGPDFDictionaryRef)node
+- (CGPDFArrayRef)destinationWithName:(const char *)destinationName inDestsTree:(CGPDFDictionaryRef)node
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	CGPDFArrayRef destinationArray = NULL;
 
 	CGPDFArrayRef limitsArray = NULL; // Limits array
@@ -235,11 +240,11 @@
 		{
 			CGPDFDictionaryRef kidNode = NULL; // Kid node dictionary
 
-			if (CGPDFArrayGetDictionary(kidsArray, index, &kidNode) == true) // Recurse into kid node
+			if (CGPDFArrayGetDictionary(kidsArray, index, &kidNode) == true) // Recurse into node
 			{
-				destinationArray = [self findDestinationWithName:destinationName inDestsTree:kidNode];
+				destinationArray = [self destinationWithName:destinationName inDestsTree:kidNode];
 
-				if (destinationArray != NULL) return destinationArray; // Return the destination array
+				if (destinationArray != NULL) return destinationArray; // Return destination array
 			}
 		}
 	}
@@ -247,17 +252,13 @@
 	return NULL;
 }
 
-- (id)findLinkTarget:(CGPDFDictionaryRef)annotationDictionary
+- (id)annotationLinkTarget:(CGPDFDictionaryRef)annotationDictionary
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	id linkTarget = nil; // Link target object
 
-	CGPDFArrayRef destArray = NULL; CGPDFStringRef destName = NULL;
+	CGPDFStringRef destName = NULL; const char *destString = NULL;
 
-	CGPDFDictionaryRef actionDictionary = NULL; // Link action dictionary
+	CGPDFDictionaryRef actionDictionary = NULL; CGPDFArrayRef destArray = NULL;
 
 	if (CGPDFDictionaryGetDictionary(annotationDictionary, "A", &actionDictionary) == true)
 	{
@@ -288,11 +289,14 @@
 			}
 		}
 	}
-	else // Handle other link target possibility
+	else // Handle other link target possibilities
 	{
 		if (CGPDFDictionaryGetArray(annotationDictionary, "Dest", &destArray) == false)
 		{
-			CGPDFDictionaryGetString(annotationDictionary, "Dest", &destName);
+			if (CGPDFDictionaryGetString(annotationDictionary, "Dest", &destName) == false)
+			{
+				CGPDFDictionaryGetName(annotationDictionary, "Dest", &destString);
+			}
 		}
 	}
 
@@ -310,7 +314,24 @@
 			{
 				const char *destinationName = (const char *)CGPDFStringGetBytePtr(destName); // Name
 
-				destArray = [self findDestinationWithName:destinationName inDestsTree:destsDictionary];
+				destArray = [self destinationWithName:destinationName inDestsTree:destsDictionary];
+			}
+		}
+	}
+
+	if (destString != NULL) // Handle a destination string
+	{
+		CGPDFDictionaryRef catalogDictionary = CGPDFDocumentGetCatalog(_PDFDocRef);
+
+		CGPDFDictionaryRef destsDictionary = NULL; // Document destinations dictionary
+
+		if (CGPDFDictionaryGetDictionary(catalogDictionary, "Dests", &destsDictionary) == true)
+		{
+			CGPDFDictionaryRef targetDictionary = NULL; // Destination target dictionary
+
+			if (CGPDFDictionaryGetDictionary(destsDictionary, destString, &targetDictionary) == true)
+			{
+				CGPDFDictionaryGetArray(targetDictionary, "D", &destArray);
 			}
 		}
 	}
@@ -323,7 +344,7 @@
 
 		if (CGPDFArrayGetDictionary(destArray, 0, &pageDictionaryFromDestArray) == true)
 		{
-			NSInteger pageCount = CGPDFDocumentGetNumberOfPages(_PDFDocRef);
+			NSInteger pageCount = CGPDFDocumentGetNumberOfPages(_PDFDocRef); // Pages
 
 			for (NSInteger pageNumber = 1; pageNumber <= pageCount; pageNumber++)
 			{
@@ -356,12 +377,8 @@
 	return linkTarget;
 }
 
-- (id)singleTap:(UITapGestureRecognizer *)recognizer
+- (id)processSingleTap:(UITapGestureRecognizer *)recognizer
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	id result = nil; // Tap result object
 
 	if (recognizer.state == UIGestureRecognizerStateRecognized)
@@ -374,7 +391,7 @@
 			{
 				if (CGRectContainsPoint(link.rect, point) == true) // Found it
 				{
-					result = [self findLinkTarget:link.dictionary]; break;
+					result = [self annotationLinkTarget:link.dictionary]; break;
 				}
 			}
 		}
@@ -387,10 +404,6 @@
 
 - (id)initWithFrame:(CGRect)frame
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	id view = nil; // UIView
 
 	if (CGRectIsEmpty(frame) == false)
@@ -399,7 +412,6 @@
 		{
 			self.autoresizesSubviews = NO;
 			self.userInteractionEnabled = NO;
-			self.clearsContextBeforeDrawing = NO;
 			self.contentMode = UIViewContentModeRedraw;
 			self.autoresizingMask = UIViewAutoresizingNone;
 			self.backgroundColor = [UIColor clearColor];
@@ -409,7 +421,7 @@
 	}
 	else // Handle invalid frame size
 	{
-		[self release];
+		self = nil;
 	}
 
 	return view;
@@ -417,15 +429,11 @@
 
 - (id)initWithURL:(NSURL *)fileURL page:(NSInteger)page password:(NSString *)phrase
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	CGRect viewRect = CGRectZero; // View rect
 
 	if (fileURL != nil) // Check for non-nil file URL
 	{
-		_PDFDocRef = CGPDFDocumentCreateX((CFURLRef)fileURL, phrase);
+		_PDFDocRef = CGPDFDocumentCreateX((__bridge CFURLRef)fileURL, phrase);
 
 		if (_PDFDocRef != NULL) // Check for non-NULL CGPDFDocumentRef
 		{
@@ -452,21 +460,25 @@
 					default: // Default case
 					case 0: case 180: // 0 and 180 degrees
 					{
-						_pageSize.width = effectiveRect.size.width;
-						_pageSize.height = effectiveRect.size.height;
+						_pageWidth = effectiveRect.size.width;
+						_pageHeight = effectiveRect.size.height;
+						_pageOffsetX = effectiveRect.origin.x;
+						_pageOffsetY = effectiveRect.origin.y;
 						break;
 					}
 
 					case 90: case 270: // 90 and 270 degrees
 					{
-						_pageSize.height = effectiveRect.size.width;
-						_pageSize.width = effectiveRect.size.height;
+						_pageWidth = effectiveRect.size.height;
+						_pageHeight = effectiveRect.size.width;
+						_pageOffsetX = effectiveRect.origin.y;
+						_pageOffsetY = effectiveRect.origin.x;
 						break;
 					}
 				}
 
-				NSInteger page_w = _pageSize.width; // Integer width
-				NSInteger page_h = _pageSize.height; // Integer height
+				NSInteger page_w = _pageWidth; // Integer width
+				NSInteger page_h = _pageHeight; // Integer height
 
 				if (page_w % 2) page_w--; if (page_h % 2) page_h--; // Even
 
@@ -496,68 +508,52 @@
 	return view;
 }
 
+- (void)removeFromSuperview
+{
+	self.layer.delegate = nil;
+
+	//self.layer.contents = nil;
+
+	[super removeFromSuperview];
+}
+
 - (void)dealloc
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
+	CGPDFPageRelease(_PDFPageRef), _PDFPageRef = NULL;
 
-	[_links release], _links = nil;
-
-	@synchronized(self) // Block any other threads
-	{
-		CGPDFPageRelease(_PDFPageRef), _PDFPageRef = NULL;
-
-		CGPDFDocumentRelease(_PDFDocRef), _PDFDocRef = NULL;
-	}
-
-	[super dealloc];
+	CGPDFDocumentRelease(_PDFDocRef), _PDFDocRef = NULL;
 }
 
-/*
-- (void)layoutSubviews
+#if (READER_DISABLE_RETINA == TRUE) // Option
+
+- (void)didMoveToWindow
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
+	self.contentScaleFactor = 1.0f; // Override scale factor
 }
-*/
+
+#endif // end of READER_DISABLE_RETINA Option
 
 #pragma mark CATiledLayer delegate methods
 
 - (void)drawLayer:(CATiledLayer *)layer inContext:(CGContextRef)context
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	CGPDFPageRef drawPDFPageRef = NULL;
-
-	CGPDFDocumentRef drawPDFDocRef = NULL;
-
-	@synchronized(self) // Block any other threads
-	{
-		drawPDFDocRef = CGPDFDocumentRetain(_PDFDocRef);
-
-		drawPDFPageRef = CGPDFPageRetain(_PDFPageRef);
-	}
+	ReaderContentPage *readerContentPage = self; // Retain self
 
 	CGContextSetRGBFillColor(context, 1.0f, 1.0f, 1.0f, 1.0f); // White
 
 	CGContextFillRect(context, CGContextGetClipBoundingBox(context)); // Fill
 
-	if (drawPDFPageRef != NULL) // Go ahead and render the PDF page into the context
-	{
-		CGContextTranslateCTM(context, 0.0f, self.bounds.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
+	//NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(CGContextGetClipBoundingBox(context)));
 
-		CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(drawPDFPageRef, kCGPDFCropBox, self.bounds, 0, true));
+	CGContextTranslateCTM(context, 0.0f, self.bounds.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
 
-		CGContextSetRenderingIntent(context, kCGRenderingIntentDefault); CGContextSetInterpolationQuality(context, kCGInterpolationDefault);
+	CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(_PDFPageRef, kCGPDFCropBox, self.bounds, 0, true));
 
-		CGContextDrawPDFPage(context, drawPDFPageRef); // Render the PDF page into the context
-	}
+	//CGContextSetRenderingIntent(context, kCGRenderingIntentDefault); CGContextSetInterpolationQuality(context, kCGInterpolationDefault);
 
-	CGPDFPageRelease(drawPDFPageRef); CGPDFDocumentRelease(drawPDFDocRef); // Cleanup
+	CGContextDrawPDFPage(context, _PDFPageRef); // Render the PDF page into the context
+
+	if (readerContentPage != nil) readerContentPage = nil; // Release self
 }
 
 @end
@@ -569,6 +565,11 @@
 //
 
 @implementation ReaderDocumentLink
+{
+	CGPDFDictionaryRef _dictionary;
+
+	CGRect _rect;
+}
 
 #pragma mark Properties
 
@@ -577,23 +578,15 @@
 
 #pragma mark ReaderDocumentLink class methods
 
-+ (id)withRect:(CGRect)linkRect dictionary:(CGPDFDictionaryRef)linkDictionary
++ (id)newWithRect:(CGRect)linkRect dictionary:(CGPDFDictionaryRef)linkDictionary
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	return [[[ReaderDocumentLink alloc] initWithRect:linkRect dictionary:linkDictionary] autorelease];
+	return [[ReaderDocumentLink alloc] initWithRect:linkRect dictionary:linkDictionary];
 }
 
 #pragma mark ReaderDocumentLink instance methods
 
 - (id)initWithRect:(CGRect)linkRect dictionary:(CGPDFDictionaryRef)linkDictionary
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	if ((self = [super init]))
 	{
 		_dictionary = linkDictionary;
@@ -602,15 +595,6 @@
 	}
 
 	return self;
-}
-
-- (void)dealloc
-{
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	[super dealloc];
 }
 
 @end

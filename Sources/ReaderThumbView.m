@@ -1,20 +1,36 @@
 //
 //	ReaderThumbView.m
-//	Reader v2.5.3
+//	Reader v2.6.1
 //
 //	Created by Julius Oklamcak on 2011-09-01.
-//	Copyright © 2011 Julius Oklamcak. All rights reserved.
+//	Copyright © 2011-2012 Julius Oklamcak. All rights reserved.
 //
-//	This work is being made available under a Creative Commons Attribution license:
-//		«http://creativecommons.org/licenses/by/3.0/»
-//	You are free to use this work and any derivatives of this work in personal and/or
-//	commercial products and projects as long as the above copyright is maintained and
-//	the original author is attributed.
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights to
+//	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+//	of the Software, and to permit persons to whom the Software is furnished to
+//	do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 #import "ReaderThumbView.h"
 
 @implementation ReaderThumbView
+{
+	NSOperation *_operation;
+
+	NSUInteger _targetTag;
+}
 
 #pragma mark Properties
 
@@ -25,10 +41,6 @@
 
 - (id)initWithFrame:(CGRect)frame
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	if ((self = [super initWithFrame:frame]))
 	{
 		self.autoresizesSubviews = NO;
@@ -41,9 +53,8 @@
 
 		imageView.autoresizesSubviews = NO;
 		imageView.userInteractionEnabled = NO;
-		imageView.contentMode = UIViewContentModeScaleAspectFit;
 		imageView.autoresizingMask = UIViewAutoresizingNone;
-		imageView.backgroundColor = [UIColor clearColor];
+		imageView.contentMode = UIViewContentModeScaleAspectFit;
 
 		[self addSubview:imageView];
 	}
@@ -51,55 +62,30 @@
 	return self;
 }
 
-- (void)dealloc
-{
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	[imageView release], imageView = nil;
-
-	[super dealloc];
-}
-
 - (void)showImage:(UIImage *)image
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	imageView.image = image; // Show image
 }
 
 - (void)showTouched:(BOOL)touched
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
+	// Implemented by ReaderThumbView subclass
 }
 
 - (void)removeFromSuperview
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	_targetTag = 0; // Clear target tag
 
-	[self.operation cancel], self.operation = nil;
+	[self.operation cancel]; // Cancel operation
 
-	[super removeFromSuperview];
+	[super removeFromSuperview]; // Remove view
 }
 
 - (void)reuse
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	_targetTag = 0; // Clear target tag
 
-	[self.operation cancel], self.operation = nil;
+	[self.operation cancel]; // Cancel operation
 
 	imageView.image = nil; // Release image
 }

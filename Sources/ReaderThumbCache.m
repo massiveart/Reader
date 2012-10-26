@@ -1,15 +1,26 @@
 //
 //	ReaderThumbCache.m
-//	Reader v2.5.2
+//	Reader v2.6.0
 //
 //	Created by Julius Oklamcak on 2011-09-01.
-//	Copyright © 2011 Julius Oklamcak. All rights reserved.
+//	Copyright © 2011-2012 Julius Oklamcak. All rights reserved.
 //
-//	This work is being made available under a Creative Commons Attribution license:
-//		«http://creativecommons.org/licenses/by/3.0/»
-//	You are free to use this work and any derivatives of this work in personal and/or
-//	commercial products and projects as long as the above copyright is maintained and
-//	the original author is attributed.
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights to
+//	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+//	of the Software, and to permit persons to whom the Software is furnished to
+//	do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 #import "ReaderThumbCache.h"
@@ -18,23 +29,18 @@
 #import "ReaderThumbView.h"
 
 @implementation ReaderThumbCache
+{
+	NSCache *thumbCache;
+}
 
 #pragma mark Constants
 
 #define CACHE_SIZE 2097152
 
-//#pragma mark Properties
-
-//@synthesize ;
-
 #pragma mark ReaderThumbCache class methods
 
 + (ReaderThumbCache *)sharedInstance
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	static dispatch_once_t predicate = 0;
 
 	static ReaderThumbCache *object = nil; // Object
@@ -46,10 +52,6 @@
 
 + (NSString *)appCachesPath
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	static dispatch_once_t predicate = 0;
 
 	static NSString *theCachesPath = nil; // Application caches path string
@@ -66,10 +68,6 @@
 
 + (NSString *)thumbCachePathForGUID:(NSString *)guid
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	NSString *cachesPath = [ReaderThumbCache appCachesPath]; // Caches path
 
 	return [cachesPath stringByAppendingPathComponent:guid]; // Append GUID
@@ -77,25 +75,15 @@
 
 + (void)createThumbCacheWithGUID:(NSString *)guid
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	NSFileManager *fileManager = [NSFileManager new]; // File manager instance
 
 	NSString *cachePath = [ReaderThumbCache thumbCachePathForGUID:guid]; // Thumb cache path
 
 	[fileManager createDirectoryAtPath:cachePath withIntermediateDirectories:NO attributes:nil error:NULL];
-
-	[fileManager release]; // Cleanup file manager instance
 }
 
 + (void)removeThumbCacheWithGUID:(NSString *)guid
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
 	^{
 		NSFileManager *fileManager = [NSFileManager new]; // File manager instance
@@ -103,17 +91,11 @@
 		NSString *cachePath = [ReaderThumbCache thumbCachePathForGUID:guid]; // Thumb cache path
 
 		[fileManager removeItemAtPath:cachePath error:NULL]; // Remove thumb cache directory
-
-		[fileManager release]; // Cleanup file manager instance
 	});
 }
 
 + (void)touchThumbCacheWithGUID:(NSString *)guid
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	NSFileManager *fileManager = [NSFileManager new]; // File manager instance
 
 	NSString *cachePath = [ReaderThumbCache thumbCachePathForGUID:guid]; // Thumb cache path
@@ -121,16 +103,10 @@
 	NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSDate date] forKey:NSFileModificationDate];
 
 	[fileManager setAttributes:attributes ofItemAtPath:cachePath error:NULL]; // New modification date
-
-	[fileManager release]; // Cleanup file manager instance
 }
 
 + (void)purgeThumbCachesOlderThan:(NSTimeInterval)age
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
 	^{
 		NSDate *now = [NSDate date]; // Right about now time
@@ -166,8 +142,6 @@
 				}
 			}
 		}
-
-		[fileManager release]; // Cleanup
 	});
 }
 
@@ -175,10 +149,6 @@
 
 - (id)init
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	if ((self = [super init])) // Initialize
 	{
 		thumbCache = [NSCache new]; // Cache
@@ -191,23 +161,8 @@
 	return self;
 }
 
-- (void)dealloc
-{
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	[thumbCache release], thumbCache = nil;
-
-	[super dealloc];
-}
-
 - (id)thumbRequest:(ReaderThumbRequest *)request priority:(BOOL)priority
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	@synchronized(thumbCache) // Mutex lock
 	{
 		id object = [thumbCache objectForKey:request.cacheKey];
@@ -224,7 +179,7 @@
 
 			request.thumbView.operation = thumbFetch; [thumbFetch setThreadPriority:(priority ? 0.55 : 0.35)]; // Thread priority
 
-			[[ReaderThumbQueue sharedInstance] addLoadOperation:thumbFetch]; [thumbFetch release]; // Queue the operation
+			[[ReaderThumbQueue sharedInstance] addLoadOperation:thumbFetch]; // Queue the operation
 		}
 
 		return object; // NSNull or UIImage
@@ -233,10 +188,6 @@
 
 - (void)setObject:(UIImage *)image forKey:(NSString *)key
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	@synchronized(thumbCache) // Mutex lock
 	{
 		NSUInteger bytes = (image.size.width * image.size.height * 4.0f);
@@ -247,10 +198,6 @@
 
 - (void)removeObjectForKey:(NSString *)key
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	@synchronized(thumbCache) // Mutex lock
 	{
 		[thumbCache removeObjectForKey:key];
@@ -259,10 +206,6 @@
 
 - (void)removeNullForKey:(NSString *)key
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	@synchronized(thumbCache) // Mutex lock
 	{
 		id object = [thumbCache objectForKey:key];
@@ -276,10 +219,6 @@
 
 - (void)removeAllObjects
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	@synchronized(thumbCache) // Mutex lock
 	{
 		[thumbCache removeAllObjects];

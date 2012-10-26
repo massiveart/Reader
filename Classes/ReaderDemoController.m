@@ -1,18 +1,34 @@
 //
 //	ReaderDemoController.m
-//	Reader v2.3.0
+//	Reader v2.6.0
 //
 //	Created by Julius Oklamcak on 2011-07-01.
-//	Copyright © 2011 Julius Oklamcak. All rights reserved.
+//	Copyright © 2011-2012 Julius Oklamcak. All rights reserved.
 //
-//	This work is being made available under a Creative Commons Attribution license:
-//		«http://creativecommons.org/licenses/by/3.0/»
-//	You are free to use this work and any derivatives of this work in personal and/or
-//	commercial products and projects as long as the above copyright is maintained and
-//	the original author is attributed.
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights to
+//	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+//	of the Software, and to permit persons to whom the Software is furnished to
+//	do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 #import "ReaderDemoController.h"
+#import "ReaderViewController.h"
+
+@interface ReaderDemoController () <ReaderViewControllerDelegate>
+
+@end
 
 @implementation ReaderDemoController
 
@@ -20,19 +36,11 @@
 
 #define DEMO_VIEW_CONTROLLER_PUSH FALSE
 
-//#pragma mark Properties
-
-//@synthesize ;
-
 #pragma mark UIViewController methods
 
 /*
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))
 	{
 		// Custom initialization
@@ -45,20 +53,12 @@
 /*
 - (void)loadView
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	// Implement loadView to create a view hierarchy programmatically, without using a nib.
 }
 */
 
 - (void)viewDidLoad
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(self.view.bounds));
-#endif
-
 	[super viewDidLoad];
 
 	self.view.backgroundColor = [UIColor clearColor]; // Transparent
@@ -86,19 +86,15 @@
 	tapLabel.autoresizingMask |= UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 	tapLabel.center = CGPointMake(viewSize.width / 2.0f, viewSize.height / 2.0f);
 
-	[self.view addSubview:tapLabel]; [tapLabel release];
+	[self.view addSubview:tapLabel]; 
 
 	UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
 	//singleTap.numberOfTouchesRequired = 1; singleTap.numberOfTapsRequired = 1; //singleTap.delegate = self;
-	[self.view addGestureRecognizer:singleTap]; [singleTap release];
+	[self.view addGestureRecognizer:singleTap]; 
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(self.view.bounds));
-#endif
-
 	[super viewWillAppear:animated];
 
 #if (DEMO_VIEW_CONTROLLER_PUSH == TRUE)
@@ -110,19 +106,11 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(self.view.bounds));
-#endif
-
 	[super viewDidAppear:animated];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(self.view.bounds));
-#endif
-
 	[super viewWillDisappear:animated];
 
 #if (DEMO_VIEW_CONTROLLER_PUSH == TRUE)
@@ -134,16 +122,12 @@
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(self.view.bounds));
-#endif
-
 	[super viewDidDisappear:animated];
 }
 
 - (void)viewDidUnload
 {
-#ifdef DEBUGX
+#ifdef DEBUG
 	NSLog(@"%s", __FUNCTION__);
 #endif
 
@@ -152,81 +136,49 @@
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-#ifdef DEBUGX
-	NSLog(@"%s (%d)", __FUNCTION__, interfaceOrientation);
-#endif
-
 	if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) // See README
 		return UIInterfaceOrientationIsPortrait(interfaceOrientation);
 	else
 		return YES;
 }
 
+/*
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@ (%d)", __FUNCTION__, NSStringFromCGRect(self.view.bounds), toInterfaceOrientation);
-#endif
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@ (%d)", __FUNCTION__, NSStringFromCGRect(self.view.bounds), interfaceOrientation);
-#endif
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
-#ifdef DEBUGX
-	NSLog(@"%s %@ (%d to %d)", __FUNCTION__, NSStringFromCGRect(self.view.bounds), fromInterfaceOrientation, self.interfaceOrientation);
-#endif
-
 	//if (fromInterfaceOrientation == self.interfaceOrientation) return;
 }
+*/
 
 - (void)didReceiveMemoryWarning
 {
-#ifdef DEBUGX
+#ifdef DEBUG
 	NSLog(@"%s", __FUNCTION__);
 #endif
 
 	[super didReceiveMemoryWarning];
 }
 
-- (void)dealloc
-{
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
-	[super dealloc];
-}
-
 #pragma mark UIGestureRecognizer methods
 
 - (void)handleSingleTap:(UITapGestureRecognizer *)recognizer
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 	NSString *phrase = nil; // Document password (for unlocking most encrypted PDF files)
 
 	NSArray *pdfs = [[NSBundle mainBundle] pathsForResourcesOfType:@"pdf" inDirectory:nil];
 
-	NSString *documentName = [[pdfs lastObject] lastPathComponent]; assert(documentName != nil);
+	NSString *filePath = [pdfs lastObject]; assert(filePath != nil); // Path to last PDF file
 
-	ReaderDocument *document = [ReaderDocument unarchiveFromFileName:documentName password:phrase];
+	ReaderDocument *document = [ReaderDocument withDocumentFilePath:filePath password:phrase];
 
-	if (document == nil) // We need to create a brand new ReaderDocument object the first time we run
-	{
-		NSString *filePath = [[NSBundle mainBundle] pathForResource:documentName ofType:nil]; // Path
-
-		document = [[[ReaderDocument alloc] initWithFilePath:filePath password:phrase] autorelease];
-	}
-
-	if (document != nil) // Must have a valid ReaderDocument object in order to proceed
+	if (document != nil) // Must have a valid ReaderDocument object in order to proceed with things
 	{
 		ReaderViewController *readerViewController = [[ReaderViewController alloc] initWithReaderDocument:document];
 
@@ -244,8 +196,6 @@
 		[self presentModalViewController:readerViewController animated:YES];
 
 #endif // DEMO_VIEW_CONTROLLER_PUSH
-
-		[readerViewController release]; // Release the ReaderViewController
 	}
 }
 
@@ -253,10 +203,6 @@
 
 - (void)dismissReaderViewController:(ReaderViewController *)viewController
 {
-#ifdef DEBUGX
-	NSLog(@"%s", __FUNCTION__);
-#endif
-
 #if (DEMO_VIEW_CONTROLLER_PUSH == TRUE)
 
 	[self.navigationController popViewControllerAnimated:YES];
