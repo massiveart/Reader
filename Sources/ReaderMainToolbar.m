@@ -73,7 +73,8 @@
         
         UIView *backgroundView = [[UIView alloc] initWithFrame:self.bounds];
         [backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
-        [backgroundView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_header.png"]]];
+//        [backgroundView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg_header.png"]]];
+        [backgroundView setBackgroundColor:[UIColor colorWithRed:0.295 green:0.401 blue:0.504 alpha:1.000]];
         [backgroundView setOpaque:NO];
         [backgroundView setAlpha:0.8];
         [self addSubview:backgroundView];
@@ -96,11 +97,12 @@
 
 		doneButton.frame = CGRectMake(leftButtonX, BUTTON_Y, DONE_BUTTON_WIDTH, BUTTON_HEIGHT);
 		[doneButton setTitle:NSLocalizedString(@"Done", @"button") forState:UIControlStateNormal];
-		[doneButton setTitleColor:[UIColor colorWithRed:51.0/255.0 green:51.0/255.0 blue:51.0/255.0 alpha:1.0f] forState:UIControlStateNormal];
+		[doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 		[doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
 		[doneButton addTarget:self action:@selector(doneButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
-		[doneButton setBackgroundImage:buttonH forState:UIControlStateHighlighted];
-		[doneButton setBackgroundImage:buttonN forState:UIControlStateNormal];
+        [doneButton setTintColor:[UIColor colorWithRed:0.186 green:0.246 blue:0.317 alpha:1.000]];
+//		[doneButton setBackgroundImage:buttonH forState:UIControlStateHighlighted];
+//		[doneButton setBackgroundImage:buttonN forState:UIControlStateNormal];
 		doneButton.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:13.0];
         doneButton.autoresizingMask = UIViewAutoresizingNone;
 
@@ -211,16 +213,16 @@
 
 			UILabel *titleLabel = [[UILabel alloc] initWithFrame:titleRect];
 
-			titleLabel.textAlignment = UITextAlignmentCenter;
-			titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:16.0f];
+			titleLabel.textAlignment = NSTextAlignmentCenter;
+			titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:18.0f];
 			titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 			titleLabel.baselineAdjustment = UIBaselineAdjustmentAlignCenters;
-			titleLabel.textColor = [UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1];
-			titleLabel.shadowColor = [UIColor whiteColor];
+			titleLabel.shadowColor = [UIColor darkGrayColor];
+			titleLabel.textColor = [UIColor colorWithWhite:0.921 alpha:1.000];
 			titleLabel.backgroundColor = [UIColor clearColor];
-			titleLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
+			titleLabel.shadowOffset = CGSizeMake(0.0f, -1.0f);
 			titleLabel.adjustsFontSizeToFitWidth = YES;
-			titleLabel.minimumFontSize = 14.0f;
+			titleLabel.minimumScaleFactor = 12.0f/16.0f;
 			titleLabel.text = [object.fileName stringByDeletingPathExtension];
 
 			[self addSubview:titleLabel]; 

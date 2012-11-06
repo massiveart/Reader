@@ -764,7 +764,8 @@
 	thumbsViewController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
 	thumbsViewController.modalPresentationStyle = UIModalPresentationFullScreen;
 
-	[self presentModalViewController:thumbsViewController animated:NO];
+//	[self presentModalViewController:thumbsViewController animated:NO];
+    [self presentViewController:thumbsViewController animated:NO completion:nil];
 }
 
 - (void)tappedInToolbar:(ReaderMainToolbar *)toolbar printButton:(UIButton *)button
@@ -848,7 +849,8 @@
 
 			mailComposer.mailComposeDelegate = self; // Set the delegate
 
-			[self presentModalViewController:mailComposer animated:YES];
+//			[self presentModalViewController:mailComposer animated:YES];
+            [self presentViewController:mailComposer animated:YES completion:nil];
 		}
 	}
 
@@ -879,7 +881,8 @@
 		if ((result == MFMailComposeResultFailed) && (error != NULL)) NSLog(@"%@", error);
 	#endif
 
-	[self dismissModalViewControllerAnimated:YES]; // Dismiss
+//	[self dismissModalViewControllerAnimated:YES]; // Dismiss
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark ThumbsViewControllerDelegate methods
@@ -888,7 +891,8 @@
 {
 	[self updateToolbarBookmarkIcon]; // Update bookmark icon
 
-	[self dismissModalViewControllerAnimated:NO]; // Dismiss
+//	[self dismissModalViewControllerAnimated:NO]; // Dismiss
+    [self dismissViewControllerAnimated:NO completion:nil];
 }
 
 - (void)thumbsViewController:(ThumbsViewController *)viewController gotoPage:(NSInteger)page
